@@ -2,7 +2,7 @@ import { asc, count, desc } from "drizzle-orm";
 import { connection } from "next/server";
 import { db } from "@/db";
 import { products, customers, conversations } from "@/db/schema";
-import { formatCurrency } from "@/lib/whatsapp-support";
+import { formatCurrency } from "@/lib/whatsapp/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +56,11 @@ async function getDashboardData(): Promise<DashboardData> {
           stock: products.stock,
         })
         .from(products)
-        .orderBy(desc(products.available), desc(products.stock), asc(products.name))
+        .orderBy(
+          desc(products.available),
+          desc(products.stock),
+          asc(products.name),
+        )
         .limit(4),
     ]);
 
@@ -93,44 +97,44 @@ export default async function Home() {
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <section className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--card)] shadow-[var(--shadow)]">
+        <section className="overflow-hidden rounded-4xl border border-(--line) bg-(--card) shadow-(--shadow)">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.4fr_0.9fr] lg:px-10 lg:py-10">
             <div className="space-y-6">
-              <span className="inline-flex w-fit items-center rounded-full border border-[rgba(15,107,69,0.2)] bg-[rgba(15,107,69,0.08)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
+              <span className="inline-flex w-fit items-center rounded-full border border-[rgba(15,107,69,0.2)] bg-[rgba(15,107,69,0.08)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-(--accent)">
                 WhatsApp + PostgreSQL + Next.js 16
               </span>
               <div className="space-y-4">
-                <h1 className="max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl lg:text-6xl">
+                <h1 className="max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl lg:text-6xl">
                   Prototipo de bot em portugues para atendimento no WhatsApp.
                 </h1>
-                <p className="max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">
+                <p className="max-w-2xl text-base leading-7 text-(--muted) sm:text-lg">
                   O fluxo esta pronto para responder perguntas sobre catalogo,
-                  consultar preco e estoque direto no banco, registrar
-                  conversas e encaminhar atendimento humano quando necessario.
+                  consultar preco e estoque direto no banco, registrar conversas
+                  e encaminhar atendimento humano quando necessario.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <article className="rounded-[1.4rem] border border-[var(--line)] bg-white/70 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                <article className="rounded-[1.4rem] border border-(--line) bg-white/70 p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-(--muted)">
                     Webhook
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
+                  <p className="mt-2 text-lg font-semibold text-foreground">
                     /api/webhooks/whatsapp
                   </p>
                 </article>
-                <article className="rounded-[1.4rem] border border-[var(--line)] bg-white/70 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                <article className="rounded-[1.4rem] border border-(--line) bg-white/70 p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-(--muted)">
                     Concorrencia
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
+                  <p className="mt-2 text-lg font-semibold text-foreground">
                     Debounce de 1.2s
                   </p>
                 </article>
-                <article className="rounded-[1.4rem] border border-[var(--line)] bg-white/70 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                <article className="rounded-[1.4rem] border border-(--line) bg-white/70 p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-(--muted)">
                     Idioma
                   </p>
-                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
+                  <p className="mt-2 text-lg font-semibold text-foreground">
                     pt-BR
                   </p>
                 </article>
@@ -138,26 +142,24 @@ export default async function Home() {
             </div>
 
             <div className="grid gap-4">
-              <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--panel)] p-5">
-                <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">
+              <div className="rounded-[1.6rem] border border-(--line) bg-(--panel) p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-(--muted)">
                   Saude do ambiente
                 </p>
                 <div className="mt-4 space-y-3">
                   {envStatus.map((item) => (
                     <div
                       key={item.name}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-white/80 px-4 py-3"
-                    >
-                      <span className="text-sm font-medium text-[var(--foreground)]">
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-(--line) bg-white/80 px-4 py-3">
+                      <span className="text-sm font-medium text-foreground">
                         {item.name}
                       </span>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
                           item.ready
-                            ? "bg-[rgba(15,107,69,0.1)] text-[var(--accent)]"
-                            : "bg-[rgba(156,55,27,0.1)] text-[var(--danger)]"
-                        }`}
-                      >
+                            ? "bg-[rgba(15,107,69,0.1)] text-(--accent)"
+                            : "bg-[rgba(156,55,27,0.1)] text-(--danger)"
+                        }`}>
                         {item.ready ? "ok" : "pendente"}
                       </span>
                     </div>
@@ -169,44 +171,44 @@ export default async function Home() {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
+          <div className="rounded-[1.8rem] border border-(--line) bg-(--card) p-6 shadow-(--shadow)">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                <p className="text-xs uppercase tracking-[0.22em] text-(--muted)">
                   Resumo do banco
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
                   Visao operacional
                 </h2>
               </div>
-              <span className="rounded-full border border-[var(--line)] bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+              <span className="rounded-full border border-(--line) bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.18em] text-(--muted)">
                 live
               </span>
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <article className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4">
-                <p className="text-sm text-[var(--muted)]">Produtos</p>
+              <article className="rounded-[1.3rem] border border-(--line) bg-white/75 p-4">
+                <p className="text-sm text-(--muted)">Produtos</p>
                 <p className="mt-2 text-3xl font-semibold">
                   {dashboardData.totalProducts}
                 </p>
               </article>
-              <article className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4">
-                <p className="text-sm text-[var(--muted)]">Clientes</p>
+              <article className="rounded-[1.3rem] border border-(--line) bg-white/75 p-4">
+                <p className="text-sm text-(--muted)">Clientes</p>
                 <p className="mt-2 text-3xl font-semibold">
                   {dashboardData.totalCustomers}
                 </p>
               </article>
-              <article className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4">
-                <p className="text-sm text-[var(--muted)]">Conversas</p>
+              <article className="rounded-[1.3rem] border border-(--line) bg-white/75 p-4">
+                <p className="text-sm text-(--muted)">Conversas</p>
                 <p className="mt-2 text-3xl font-semibold">
                   {dashboardData.totalConversations}
                 </p>
               </article>
             </div>
 
-            <div className="mt-6 rounded-[1.4rem] border border-dashed border-[var(--line)] bg-[rgba(255,255,255,0.55)] p-4">
-              <p className="text-sm leading-6 text-[var(--muted)]">
+            <div className="mt-6 rounded-[1.4rem] border border-dashed border-(--line) bg-[rgba(255,255,255,0.55)] p-4">
+              <p className="text-sm leading-6 text-(--muted)">
                 {dashboardData.dbError
                   ? `Falha ao consultar o banco: ${dashboardData.dbError}`
                   : "Se o catalogo estiver vazio, rode `bun run db:migrate` e depois `bun run db:seed`."}
@@ -214,8 +216,8 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
-            <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+          <div className="rounded-[1.8rem] border border-(--line) bg-(--card) p-6 shadow-(--shadow)">
+            <p className="text-xs uppercase tracking-[0.22em] text-(--muted)">
               Perguntas exemplo
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
@@ -225,12 +227,11 @@ export default async function Home() {
               {sampleQuestions.map((question, index) => (
                 <article
                   key={question}
-                  className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4"
-                >
-                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                  className="rounded-[1.3rem] border border-(--line) bg-white/75 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-(--muted)">
                     Exemplo {index + 1}
                   </p>
-                  <p className="mt-2 text-base font-medium text-[var(--foreground)]">
+                  <p className="mt-2 text-base font-medium text-foreground">
                     {question}
                   </p>
                 </article>
@@ -240,8 +241,8 @@ export default async function Home() {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
-            <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+          <div className="rounded-[1.8rem] border border-(--line) bg-(--card) p-6 shadow-(--shadow)">
+            <p className="text-xs uppercase tracking-[0.22em] text-(--muted)">
               Catalogo em destaque
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
@@ -249,7 +250,7 @@ export default async function Home() {
             </h2>
             <div className="mt-6 grid gap-3">
               {dashboardData.featuredProducts.length === 0 ? (
-                <div className="rounded-[1.4rem] border border-dashed border-[var(--line)] bg-white/70 p-5 text-sm leading-6 text-[var(--muted)]">
+                <div className="rounded-[1.4rem] border border-dashed border-(--line) bg-white/70 p-5 text-sm leading-6 text-(--muted)">
                   Nenhum produto encontrado ainda. O bot continua funcionando,
                   mas vai responder que o catalogo esta vazio ate o seed ser
                   executado.
@@ -258,29 +259,27 @@ export default async function Home() {
                 dashboardData.featuredProducts.map((product) => (
                   <article
                     key={product.slug}
-                    className="grid gap-3 rounded-[1.4rem] border border-[var(--line)] bg-white/80 p-4 sm:grid-cols-[1fr_auto]"
-                  >
+                    className="grid gap-3 rounded-[1.4rem] border border-(--line) bg-white/80 p-4 sm:grid-cols-[1fr_auto]">
                     <div>
-                      <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {product.name}
                       </h3>
-                      <p className="mt-1 text-sm text-[var(--muted)]">
+                      <p className="mt-1 text-sm text-(--muted)">
                         {product.available && product.stock > 0
                           ? `${product.stock} unidade(s) em estoque`
                           : "Indisponivel no momento"}
                       </p>
                     </div>
                     <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                      <span className="text-lg font-semibold text-[var(--foreground)]">
+                      <span className="text-lg font-semibold text-foreground">
                         {formatCurrency(product.price)}
                       </span>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
                           product.available && product.stock > 0
-                            ? "bg-[rgba(15,107,69,0.1)] text-[var(--accent)]"
-                            : "bg-[rgba(156,55,27,0.1)] text-[var(--danger)]"
-                        }`}
-                      >
+                            ? "bg-[rgba(15,107,69,0.1)] text-(--accent)"
+                            : "bg-[rgba(156,55,27,0.1)] text-(--danger)"
+                        }`}>
                         {product.available && product.stock > 0
                           ? "disponivel"
                           : "indisponivel"}
@@ -292,8 +291,8 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
-            <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+          <div className="rounded-[1.8rem] border border-(--line) bg-(--card) p-6 shadow-(--shadow)">
+            <p className="text-xs uppercase tracking-[0.22em] text-(--muted)">
               Fluxos cobertos
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
@@ -308,8 +307,7 @@ export default async function Home() {
               ].map((item) => (
                 <article
                   key={item}
-                  className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4 text-sm leading-6 text-[var(--foreground)]"
-                >
+                  className="rounded-[1.3rem] border border-(--line) bg-white/75 p-4 text-sm leading-6 text-foreground">
                   {item}
                 </article>
               ))}
