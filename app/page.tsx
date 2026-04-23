@@ -1,65 +1,322 @@
-import Image from "next/image";
+import { asc, count, desc } from "drizzle-orm";
+import { connection } from "next/server";
+import { db } from "@/db";
+import { products, customers, conversations } from "@/db/schema";
+import { formatCurrency } from "@/lib/whatsapp-support";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+const requiredEnvVars = [
+  "DATABASE_URL",
+  "WHATSAPP_ACCESS_TOKEN",
+  "WHATSAPP_APP_SECRET",
+  "WHATSAPP_PHONE_NUMBER_ID",
+  "WHATSAPP_VERIFY_TOKEN",
+  "WHATSAPP_BOT_USERNAME",
+] as const;
+
+const sampleQuestions = [
+  "Oi, quais produtos vocês têm hoje?",
+  "Quanto custa o moedor manual preto?",
+  "Tem camiseta bora de cafe em estoque?",
+  "Quero falar com um atendente.",
+];
+
+type DashboardData = {
+  dbError: string | null;
+  totalConversations: number;
+  totalCustomers: number;
+  totalProducts: number;
+  featuredProducts: Array<{
+    available: boolean;
+    name: string;
+    price: number;
+    slug: string;
+    stock: number;
+  }>;
+};
+
+async function getDashboardData(): Promise<DashboardData> {
+  try {
+    const [
+      [{ totalProducts }],
+      [{ totalCustomers }],
+      [{ totalConversations }],
+      featuredProducts,
+    ] = await Promise.all([
+      db.select({ totalProducts: count() }).from(products),
+      db.select({ totalCustomers: count() }).from(customers),
+      db.select({ totalConversations: count() }).from(conversations),
+      db
+        .select({
+          available: products.available,
+          name: products.name,
+          price: products.price,
+          slug: products.slug,
+          stock: products.stock,
+        })
+        .from(products)
+        .orderBy(desc(products.available), desc(products.stock), asc(products.name))
+        .limit(4),
+    ]);
+
+    return {
+      dbError: null,
+      totalConversations: Number(totalConversations),
+      totalCustomers: Number(totalCustomers),
+      totalProducts: Number(totalProducts),
+      featuredProducts,
+    };
+  } catch (error) {
+    return {
+      dbError:
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel consultar o banco de dados.",
+      totalConversations: 0,
+      totalCustomers: 0,
+      totalProducts: 0,
+      featuredProducts: [],
+    };
+  }
+}
+
+export default async function Home() {
+  await connection();
+
+  const envStatus = requiredEnvVars.map((name) => ({
+    name,
+    ready: Boolean(process.env[name]),
+  }));
+  const dashboardData = await getDashboardData();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <section className="overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--card)] shadow-[var(--shadow)]">
+          <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.4fr_0.9fr] lg:px-10 lg:py-10">
+            <div className="space-y-6">
+              <span className="inline-flex w-fit items-center rounded-full border border-[rgba(15,107,69,0.2)] bg-[rgba(15,107,69,0.08)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
+                WhatsApp + PostgreSQL + Next.js 16
+              </span>
+              <div className="space-y-4">
+                <h1 className="max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl lg:text-6xl">
+                  Prototipo de bot em portugues para atendimento no WhatsApp.
+                </h1>
+                <p className="max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">
+                  O fluxo esta pronto para responder perguntas sobre catalogo,
+                  consultar preco e estoque direto no banco, registrar
+                  conversas e encaminhar atendimento humano quando necessario.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <article className="rounded-[1.4rem] border border-[var(--line)] bg-white/70 p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                    Webhook
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
+                    /api/webhooks/whatsapp
+                  </p>
+                </article>
+                <article className="rounded-[1.4rem] border border-[var(--line)] bg-white/70 p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                    Concorrencia
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
+                    Debounce de 1.2s
+                  </p>
+                </article>
+                <article className="rounded-[1.4rem] border border-[var(--line)] bg-white/70 p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                    Idioma
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
+                    pt-BR
+                  </p>
+                </article>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--panel)] p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">
+                  Saude do ambiente
+                </p>
+                <div className="mt-4 space-y-3">
+                  {envStatus.map((item) => (
+                    <div
+                      key={item.name}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-white/80 px-4 py-3"
+                    >
+                      <span className="text-sm font-medium text-[var(--foreground)]">
+                        {item.name}
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
+                          item.ready
+                            ? "bg-[rgba(15,107,69,0.1)] text-[var(--accent)]"
+                            : "bg-[rgba(156,55,27,0.1)] text-[var(--danger)]"
+                        }`}
+                      >
+                        {item.ready ? "ok" : "pendente"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                  Resumo do banco
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
+                  Visao operacional
+                </h2>
+              </div>
+              <span className="rounded-full border border-[var(--line)] bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                live
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <article className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4">
+                <p className="text-sm text-[var(--muted)]">Produtos</p>
+                <p className="mt-2 text-3xl font-semibold">
+                  {dashboardData.totalProducts}
+                </p>
+              </article>
+              <article className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4">
+                <p className="text-sm text-[var(--muted)]">Clientes</p>
+                <p className="mt-2 text-3xl font-semibold">
+                  {dashboardData.totalCustomers}
+                </p>
+              </article>
+              <article className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4">
+                <p className="text-sm text-[var(--muted)]">Conversas</p>
+                <p className="mt-2 text-3xl font-semibold">
+                  {dashboardData.totalConversations}
+                </p>
+              </article>
+            </div>
+
+            <div className="mt-6 rounded-[1.4rem] border border-dashed border-[var(--line)] bg-[rgba(255,255,255,0.55)] p-4">
+              <p className="text-sm leading-6 text-[var(--muted)]">
+                {dashboardData.dbError
+                  ? `Falha ao consultar o banco: ${dashboardData.dbError}`
+                  : "Se o catalogo estiver vazio, rode `bun run db:migrate` e depois `bun run db:seed`."}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
+            <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+              Perguntas exemplo
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
+              O que o bot responde hoje
+            </h2>
+            <div className="mt-6 grid gap-3">
+              {sampleQuestions.map((question, index) => (
+                <article
+                  key={question}
+                  className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4"
+                >
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                    Exemplo {index + 1}
+                  </p>
+                  <p className="mt-2 text-base font-medium text-[var(--foreground)]">
+                    {question}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
+            <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+              Catalogo em destaque
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
+              Produtos consultados pelo bot
+            </h2>
+            <div className="mt-6 grid gap-3">
+              {dashboardData.featuredProducts.length === 0 ? (
+                <div className="rounded-[1.4rem] border border-dashed border-[var(--line)] bg-white/70 p-5 text-sm leading-6 text-[var(--muted)]">
+                  Nenhum produto encontrado ainda. O bot continua funcionando,
+                  mas vai responder que o catalogo esta vazio ate o seed ser
+                  executado.
+                </div>
+              ) : (
+                dashboardData.featuredProducts.map((product) => (
+                  <article
+                    key={product.slug}
+                    className="grid gap-3 rounded-[1.4rem] border border-[var(--line)] bg-white/80 p-4 sm:grid-cols-[1fr_auto]"
+                  >
+                    <div>
+                      <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                        {product.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-[var(--muted)]">
+                        {product.available && product.stock > 0
+                          ? `${product.stock} unidade(s) em estoque`
+                          : "Indisponivel no momento"}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
+                      <span className="text-lg font-semibold text-[var(--foreground)]">
+                        {formatCurrency(product.price)}
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
+                          product.available && product.stock > 0
+                            ? "bg-[rgba(15,107,69,0.1)] text-[var(--accent)]"
+                            : "bg-[rgba(156,55,27,0.1)] text-[var(--danger)]"
+                        }`}
+                      >
+                        {product.available && product.stock > 0
+                          ? "disponivel"
+                          : "indisponivel"}
+                      </span>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[var(--shadow)]">
+            <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+              Fluxos cobertos
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
+              Edge cases tratados
+            </h2>
+            <div className="mt-6 grid gap-3">
+              {[
+                "Mensagens curtas em sequencia sao consolidadas com debounce para evitar respostas fora de contexto.",
+                "Mensagens sem texto, audio, imagem ou documento recebem uma orientacao clara para continuar por texto.",
+                "Pedidos de atendimento humano viram handoff persistido em banco, com comando explicito para voltar ao bot.",
+                "Perguntas vagas como 'quanto custa?' entram em modo de follow-up e esperam o nome do produto.",
+              ].map((item) => (
+                <article
+                  key={item}
+                  className="rounded-[1.3rem] border border-[var(--line)] bg-white/75 p-4 text-sm leading-6 text-[var(--foreground)]"
+                >
+                  {item}
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }

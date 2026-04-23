@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WhatsApp Bot Prototype
 
-## Getting Started
+Protótipo de bot para WhatsApp usando Next.js 16, Vercel Chat SDK, adaptador
+do WhatsApp e PostgreSQL.
 
-First, run the development server:
+## O que já está pronto
+
+- Respostas em português do Brasil.
+- Consulta de catálogo, preço e estoque direto no banco.
+- Persistência de clientes, conversas e mensagens.
+- Handoff para atendimento humano com estado persistido.
+- Tratamento de edge cases comuns do WhatsApp:
+  - rajadas de mensagens curtas com debounce;
+  - perguntas vagas que exigem follow-up;
+  - mensagens sem texto ou com anexos;
+  - retomada do bot após handoff humano.
+
+## Variáveis de ambiente
+
+Crie um `.env` com:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+DATABASE_URL=...
+WHATSAPP_ACCESS_TOKEN=...
+WHATSAPP_APP_SECRET=...
+WHATSAPP_PHONE_NUMBER_ID=...
+WHATSAPP_VERIFY_TOKEN=...
+WHATSAPP_BOT_USERNAME=loja-bot
+```
+
+## Banco de dados
+
+Rode as migrations:
+
+```bash
+bun run db:migrate
+```
+
+Se quiser um catálogo inicial para testar o bot:
+
+```bash
+bun run db:seed
+```
+
+Observação: o campo `price` é armazenado em centavos.
+
+## Desenvolvimento
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra `http://localhost:3000` para ver a página de status do protótipo.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Webhook do WhatsApp
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use este endpoint no painel da Meta:
 
-## Learn More
+```txt
+/api/webhooks/whatsapp
+```
 
-To learn more about Next.js, take a look at the following resources:
+Em desenvolvimento, exponha o app com ngrok ou ferramenta equivalente.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Exemplos de perguntas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `Oi, quais produtos vocês têm hoje?`
+- `Quanto custa o moedor manual preto?`
+- `Tem camiseta bora de cafe em estoque?`
+- `Quero falar com um atendente`
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `bun dev`
+- `bun run build`
+- `bun run lint`
+- `bun run db:migrate`
+- `bun run db:seed`
