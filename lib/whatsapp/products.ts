@@ -19,14 +19,14 @@ function buildSearchQuery(rawText: string) {
 
 function resolveProductStatus(product: ProductRecord) {
   if (!product.available) {
-    return "Indisponivel no momento.";
+    return "❌ Indisponível no momento.";
   }
 
   if (product.stock <= 0) {
-    return "Disponivel no cadastro, mas com estoque zerado agora.";
+    return "⚠️ Disponível no cadastro, mas com estoque zerado agora.";
   }
 
-  return `Disponivel com ${product.stock} unidade(s) em estoque.`;
+  return `✅ Disponível com ${product.stock} unidade(s) em estoque.`;
 }
 
 function resolveProductSearch(
@@ -120,29 +120,30 @@ export function buildCatalogReply(catalog: ProductRecord[]): ReplyPlan {
   if (catalog.length === 0) {
     return {
       state: BOT_STATE_DEFAULT,
-      text: "Meu catalogo esta vazio no momento. Rode o seed ou cadastre produtos no banco para eu conseguir consultar.",
+      text: "Meu catálogo está vazio no momento. 📋 Rode o seed ou cadastre produtos no banco para eu conseguir consultar.",
     } satisfies ReplyPlan;
   }
 
   const visibleProducts = catalog.slice(0, 6);
   const lines = visibleProducts.map(
     (product) =>
-      `- ${product.name}: ${formatCurrency(product.price)}${
+      `• *${product.name}*: ${formatCurrency(product.price)}${
         product.available && product.stock > 0
-          ? ` (${product.stock} em estoque)`
-          : " (indisponivel)"
+          ? ` ✅ (${product.stock} em estoque)`
+          : " ❌ (indisponível)"
       }`,
   );
 
   return {
     state: BOT_STATE_DEFAULT,
     text: [
-      "Aqui vai um recorte do catalogo atual:",
+      "🛍️ *Catálogo atual:*",
+      "",
       ...lines,
       "",
       catalog.length > visibleProducts.length
-        ? "Se quiser, eu tambem posso buscar um produto especifico por nome."
-        : "Se quiser, posso te passar mais detalhes de qualquer item.",
+        ? "Se quiser, também posso buscar um produto específico por nome. 🔍"
+        : "Se quiser, posso te passar mais detalhes de qualquer item. 😊",
     ].join("\n"),
   } satisfies ReplyPlan;
 }
@@ -155,7 +156,7 @@ export function buildCheapestReply(catalog: ProductRecord[]): ReplyPlan {
   if (availableProducts.length === 0) {
     return {
       state: BOT_STATE_DEFAULT,
-      text: "Nao encontrei produtos disponiveis no momento. Se preferir, posso te encaminhar para um atendente.",
+      text: "Não encontrei produtos disponíveis no momento. 😕 Se preferir, posso te encaminhar para um atendente.",
     } satisfies ReplyPlan;
   }
 
@@ -166,13 +167,14 @@ export function buildCheapestReply(catalog: ProductRecord[]): ReplyPlan {
   return {
     state: BOT_STATE_DEFAULT,
     text: [
-      "Os itens mais em conta agora sao:",
+      "🏷️ *Os itens mais em conta agora são:*",
+      "",
       ...cheapestProducts.map(
         (product) =>
-          `- ${product.name}: ${formatCurrency(product.price)} (${product.stock} em estoque)`,
+          `• *${product.name}*: ${formatCurrency(product.price)} ✅ (${product.stock} em estoque)`,
       ),
       "",
-      "Se quiser, eu comparo algum deles com outro produto do catalogo.",
+      "Se quiser, comparo algum deles com outro produto do catálogo. 😊",
     ].join("\n"),
   } satisfies ReplyPlan;
 }
@@ -190,25 +192,25 @@ function buildProductReply(
   if (intent === "price") {
     return {
       state: baseState,
-      text: `${product.name} esta saindo por ${formatCurrency(product.price)}. ${resolveProductStatus(product)}`,
+      text: `💰 *${product.name}* está saindo por ${formatCurrency(product.price)}. ${resolveProductStatus(product)}`,
     };
   }
 
   if (intent === "availability") {
     return {
       state: baseState,
-      text: `${product.name}: ${resolveProductStatus(product)}`,
+      text: `📦 *${product.name}*: ${resolveProductStatus(product)}`,
     };
   }
 
   return {
     state: baseState,
     text: [
-      `${product.name}`,
-      `- Preco: ${formatCurrency(product.price)}`,
-      `- Status: ${resolveProductStatus(product)}`,
+      `🛍️ *${product.name}*`,
+      `• 💰 Preço: ${formatCurrency(product.price)}`,
+      `• 📦 Status: ${resolveProductStatus(product)}`,
       "",
-      "Se quiser, posso consultar preco, estoque ou listar outras opcoes.",
+      "Se quiser, posso consultar preço, estoque ou listar outras opções. 😊",
     ].join("\n"),
   };
 }
@@ -228,7 +230,7 @@ export async function resolveProductIntentReply(
   if (resolution.kind === "catalog-empty") {
     return {
       state: BOT_STATE_DEFAULT,
-      text: "Ainda nao tenho produtos cadastrados para consultar. Rode o seed ou cadastre itens no banco primeiro.",
+      text: "Ainda não tenho produtos cadastrados para consultar. 📋 Rode o seed ou cadastre itens no banco primeiro.",
     } satisfies ReplyPlan;
   }
 
@@ -238,7 +240,7 @@ export async function resolveProductIntentReply(
         ...state,
         awaiting: intent,
       },
-      text: "Qual produto voce quer consultar?",
+      text: "Qual produto você quer consultar? 🔍",
     } satisfies ReplyPlan;
   }
 
@@ -248,7 +250,7 @@ export async function resolveProductIntentReply(
         ...state,
         awaiting: intent,
       },
-      text: "Nao encontrei esse produto no catalogo. Me diga o nome exato ou escreva 'catalogo' para eu listar as opcoes.",
+      text: "Não encontrei esse produto no catálogo. 😕 Me diga o nome exato ou escreva *catálogo* para eu listar as opções.",
     } satisfies ReplyPlan;
   }
 
@@ -259,10 +261,11 @@ export async function resolveProductIntentReply(
         awaiting: intent,
       },
       text: [
-        "Encontrei mais de uma opcao parecida:",
-        ...resolution.options.map((product) => `- ${product.name}`),
+        "Encontrei mais de uma opção parecida: 🤔",
         "",
-        "Me diga o nome exato do produto que voce quer consultar.",
+        ...resolution.options.map((product) => `• ${product.name}`),
+        "",
+        "Me diga o nome exato do produto que você quer consultar.",
       ].join("\n"),
     } satisfies ReplyPlan;
   }

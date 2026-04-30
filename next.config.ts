@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   allowedDevOrigins: [
-    "6cd5-2804-e24-fd45-6700-ed17-26dc-3fb7-5ed9.ngrok-free.app",
+    "2b29-2804-e24-fd50-9d00-4c58-523c-93ed-e9ee.ngrok-free.app",
   ],
 };
 

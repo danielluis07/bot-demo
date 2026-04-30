@@ -41,18 +41,18 @@ function buildAttachmentReply(message: Message) {
   const attachmentTypes = new Set(message.attachments.map((item) => item.type));
 
   if (attachmentTypes.has("audio")) {
-    return "Ainda nao consigo transcrever audio neste prototipo. Me mande sua pergunta em texto que eu continuo por aqui.";
+    return "Ainda não consigo transcrever áudio neste protótipo. 🎤 Me manda sua pergunta em texto que eu continuo por aqui!";
   }
 
   if (attachmentTypes.has("image") || attachmentTypes.has("file")) {
-    return "Recebi o anexo, mas neste prototipo eu respondo melhor quando voce descreve a duvida em texto.";
+    return "Recebi o anexo! 📎 Mas neste protótipo eu respondo melhor quando você descreve a dúvida em texto. 😊";
   }
 
   if (attachmentTypes.has("video")) {
-    return "Recebi o video, mas neste prototipo eu so processo mensagens em texto.";
+    return "Recebi o vídeo! 🎥 Mas neste protótipo eu só processo mensagens em texto.";
   }
 
-  return "Recebi sua mensagem, mas preciso que voce escreva a pergunta em texto para eu consultar o banco.";
+  return "Recebi sua mensagem! 📩 Mas preciso que você escreva a pergunta em texto para eu consultar o banco. 😊";
 }
 
 async function buildReplyPlan(
@@ -73,7 +73,7 @@ async function buildReplyPlan(
   if (!rawText) {
     return {
       state,
-      text: "Nao consegui identificar sua pergunta. Pode me mandar de novo em texto?",
+      text: "Não consegui identificar sua pergunta. 🤔 Pode me mandar de novo em texto?",
     } satisfies ReplyPlan;
   }
 
@@ -82,7 +82,7 @@ async function buildReplyPlan(
       return {
         state: BOT_STATE_DEFAULT,
         status: "bot",
-        text: "Perfeito, voltei para o atendimento automatico. Pode me perguntar sobre produtos, preco ou estoque.",
+        text: "Perfeito! 🤖 Voltei para o atendimento automático. Pode me perguntar sobre produtos, preço ou estoque. 😊",
       } satisfies ReplyPlan;
     }
 
@@ -92,7 +92,7 @@ async function buildReplyPlan(
         awaiting: null,
         mode: "human_requested",
       },
-      text: "Seu atendimento humano ja foi solicitado. Para voltar ao bot, escreva 'voltar para o bot'.",
+      text: "Seu atendimento humano já foi solicitado. 🧑‍💼 Para voltar ao bot, escreva *voltar para o bot*.",
     } satisfies ReplyPlan;
   }
 
@@ -104,7 +104,7 @@ async function buildReplyPlan(
         mode: "human_requested",
       },
       status: "human_requested",
-      text: "Tudo certo. Vou registrar seu pedido de atendimento humano. Para voltar ao bot depois, escreva 'voltar para o bot'.",
+      text: "Tudo certo! 🧑‍💼 Vou registrar seu pedido de atendimento humano. Para voltar ao bot depois, escreva *voltar para o bot*.",
       unsubscribe: true,
     } satisfies ReplyPlan;
   }
@@ -113,7 +113,7 @@ async function buildReplyPlan(
     return {
       state: BOT_STATE_DEFAULT,
       status: "closed",
-      text: "Conversa encerrada. Quando quiser retomar, e so mandar 'oi'.",
+      text: "Conversa encerrada. 👋 Quando quiser retomar, é só mandar *oi*!",
       unsubscribe: true,
     } satisfies ReplyPlan;
   }
@@ -136,7 +136,7 @@ async function buildReplyPlan(
   if (isOrderRequest(normalizedText)) {
     return {
       state: BOT_STATE_DEFAULT,
-      text: "Neste prototipo eu consulto catalogo, preco e estoque. Para pedido, entrega ou rastreio, escreva 'atendente' que eu encaminho.",
+      text: "Neste protótipo eu consulto catálogo, preço e estoque. 🛍️ Para pedido, entrega ou rastreio, escreva *atendente* que eu encaminho. 😊",
     } satisfies ReplyPlan;
   }
 
@@ -167,20 +167,20 @@ async function buildReplyPlan(
   if (isThanks(normalizedText)) {
     return {
       state,
-      text: "Por nada. Se precisar, posso continuar consultando o catalogo para voce.",
+      text: "Por nada! 😊 Se precisar, posso continuar consultando o catálogo para você.",
     } satisfies ReplyPlan;
   }
 
   if (isGreeting(normalizedText)) {
     return {
       state: BOT_STATE_DEFAULT,
-      text: "Oi! Eu sou o assistente da loja. Posso consultar produtos, preco e estoque. Se quiser ver tudo o que eu faco, escreva 'menu'.",
+      text: "Olá! 👋 Sou o assistente virtual da loja. Posso consultar produtos, preço e estoque. Se quiser ver tudo que eu faço, escreva *menu*. 😊",
     } satisfies ReplyPlan;
   }
 
   return {
     state,
-    text: "Ainda nao entendi essa solicitacao. Neste prototipo eu ajudo com catalogo, preco, estoque e handoff humano. Escreva 'menu' para ver exemplos.",
+    text: "Ainda não entendi essa solicitação. 🤔 Neste protótipo eu ajudo com catálogo, preço, estoque e transferência para atendente. Escreva *menu* para ver exemplos.",
   } satisfies ReplyPlan;
 }
 
@@ -236,7 +236,7 @@ export async function handleWhatsAppMessage(
     console.error("whatsapp-bot-error", error);
 
     const sentMessage = await thread.post(
-      "Estou com uma instabilidade agora e nao consegui concluir sua consulta. Tente novamente em instantes.",
+      "Estou com uma instabilidade agora e não consegui concluir sua consulta. ⚠️ Tente novamente em instantes.",
     );
 
     if (conversationContext) {

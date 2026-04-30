@@ -7,17 +7,18 @@ export const BOT_STATE_DEFAULT: BotThreadState = {
 };
 
 export const HELP_MESSAGE = [
-  "Posso te ajudar com:",
-  "- Listar produtos do catalogo",
-  "- Consultar preco",
-  "- Verificar disponibilidade e estoque",
-  "- Mostrar o produto mais barato",
-  "- Encaminhar para um atendente humano",
+  "🤖 *O que posso fazer por você:*",
   "",
-  "Exemplos:",
-  '- "Quais produtos voces tem?"',
-  '- "Quanto custa o moedor manual preto?"',
-  '- "Tem camiseta bora de cafe em estoque?"',
+  "🛍️ Listar produtos do catálogo",
+  "💰 Consultar preço",
+  "📦 Verificar disponibilidade e estoque",
+  "🏷️ Mostrar o produto mais barato",
+  "🧑‍💼 Encaminhar para um atendente humano",
+  "",
+  "*Exemplos:*",
+  '• "Quais produtos vocês têm?"',
+  '• "Quanto custa o moedor manual preto?"',
+  '• "Tem camiseta bora de café em estoque?"',
 ].join("\n");
 
 export const PRODUCT_QUERY_NOISE = new Set([
